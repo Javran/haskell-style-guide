@@ -208,6 +208,49 @@ foobar = case something of
 
 Align the `->` arrows when it helps readability.
 
+Extensions
+---
+
+Languages are grouped into three categories:
+
+1. These should always be enabled. In order to work well with tools such as `hdevtools` and `hlint`, these should still be put in top-of-file pragmas in addition to the `*.cabal` file.
+2. Acceptable for common use.
+3. Should not be used.
+
+These may change over time, but all code should be written with these classifications in mind. When in doubt, ask for clarification.
+
+### Encouraged Extensions
+
+`DoAndIfThenElse`: Enable whenever you need `if`-`then`-`else` clauses in monadic code.
+
+`OverloadedStrings`: Enable whenever you are working with `ByteString`s, `Text`, or `FilePath`s, and definitely whenever working with `ClassyPrelude`.
+
+`NoImplicitPrelude`: In a project that uses `ClassyPrelude`, *all* files should use `ClassyPrelude`. You may import functions you need from `Prelude` and hide things from `ClassyPrelude`, but should keep this to a minimum.
+
+`Derive*`: All extensions which enable deriving instances of `Typeable`, `Functor`, `Applicative`, `Generic`, etc, are encouraged, as they reduce boilerplate significantly.
+
+`FlexibleInstances`, `FlexibleContexts`: Allow writing flexible typeclasses.
+
+`BangPatterns`: Enable strictness annotations.
+
+### Allowed Extensions
+
+`ScopedTypeVariables`: For writing clear type signatures, especially in `where` clauses.
+
+`TypeSynonymInstances`: Especially where the underlying type is supposed to be mostly hidden.
+
+`NoMonomorphismRestriction`: Only to be used in code which requires it, such as when working with Diagrams or other similar packages.
+
+`TemplateHaskell`: To be used sparingly.
+
+Most type system extensions, such as `ExistentialQuantification`, `GADTs`, `TypeFamilies` are acceptable.
+
+### Forbidden Extensions
+
+Pretty much everything else. In particular, avoid extensions which make your code less readable to people who are not used to them. This includes `ViewPatterns` (sorry), `MonadComprehensions` (and other list comprehension extensions), `RecursiveDo`, `DoRec`, `UnicodeSyntax`.
+
+When in doubt, ask for clarification.
+
 Imports
 -------
 

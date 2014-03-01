@@ -1,38 +1,43 @@
 Haskell Style Guide
 ===================
 
-This is a short document describing the preferred coding style for
-this project.  I've tried to cover the major areas of formatting and
-naming.  When something isn't covered by this guide you should stay
-consistent with the code in the other modules.
+Every major open-source project has its own style guide: a set of
+conventions (sometimes arbitrary) about how to write code for that
+project.  It is much easier to understand a large codebase when all
+the code in it is in a consistent style.
+
+This project holds the style guidelines I use for my code.  If you are
+modifying a project that was created by me, you may be pointed to this style
+guide.  I've tried to cover the major areas of formatting and naming.  When
+something isn't covered by this guide you should stay consistent with the code
+in the other modules. However, it is generally acceptable to fix formatting if
+you find places where it needs to be fixed.
 
 Formatting
 ----------
 
 ### Line Length
 
-Maximum line length is *80 characters*.
+Maximum line length is **100 characters**.
 
 ### Indentation
 
 Tabs are illegal. Use spaces for indenting.  Indent your code blocks
-with *4 spaces*.  Indent the `where` keyword two spaces to set it
-apart from the rest of the code and indent the definitions in a
-`where` clause 2 spaces. Some examples:
+with **2 spaces**.  Indent the definitions in a `where` clause 2 spaces. Some examples:
 
 ```haskell
 sayHello :: IO ()
 sayHello = do
-    name <- getLine
-    putStrLn $ greeting name
+  name <- getLine
+  putStrLn $ greeting name
   where
     greeting name = "Hello, " ++ name ++ "!"
 
 filter :: (a -> Bool) -> [a] -> [a]
-filter _ []     = []
+filter _ []   = []
 filter p (x:xs)
-    | p x       = x : filter p xs
-    | otherwise = filter p xs
+  | p x       = x : filter p xs
+  | otherwise = filter p xs
 ```
 
 ### Blank Lines
@@ -40,14 +45,12 @@ filter p (x:xs)
 One blank line between top-level definitions.  No blank lines between
 type signatures and function definitions.  Add one blank line between
 functions in a type class instance declaration if the functions bodies
-are large.  Use your judgement.
+are large. Use your judgement.
 
 ### Whitespace
 
-Surround binary operators with a single space on either side.  Use
-your better judgement for the insertion of spaces around arithmetic
-operators but always be consistent about whitespace on either side of
-a binary operator.  Don't insert a space after a lambda.
+Surround binary operators with a single space on either side, including all
+arithmetic operators. Don't insert a space after a lambda.
 
 ### Data Declarations
 
@@ -134,22 +137,34 @@ foo = alloca 10 $ \a ->
       alloca 20 $ \b ->
       cFunction a b
 ```
+Whenever the lambda is used in something that implies a context (such as loops
+or resource management), make sure to indent the code in the lambda.
 
 ### Export Lists
 
 Format export lists as follows:
 
 ```haskell
-module Data.Set
-    (
-      -- * The @Set@ type
-      Set
-    , empty
-    , singleton
+module Data.Set (
+    -- * The @Set@ type
+    Set
+  , empty
+  , singleton
 
-      -- * Querying
-    , member
-    ) where
+    -- * Querying
+  , member
+) where
+```
+
+If you don't have Haddock comments, the following is also acceptable:
+
+```haskell
+module Data.Set (
+  Set,
+  empty,
+  singleton,
+  member,
+) where
 ```
 
 ### If-then-else clauses
@@ -168,37 +183,9 @@ foo = if ...
       else ...
 ```
 
-Otherwise, you should be consistent with the 4-spaces indent rule, and the
-`then` and the `else` keyword should be aligned.  Examples:
-
-```haskell
-foo = do
-    someCode
-    if condition
-        then someMoreCode
-        else someAlternativeCode
-```
-
-```haskell
-foo = bar $ \qux -> if predicate qux
-    then doSomethingSilly
-    else someOtherCode
-```
-
-The same rule applies to nested do blocks:
-
-```haskell
-foo = do
-    instruction <- decodeInstruction
-    skip <- load Memory.skip
-    if skip == 0x0000
-        then do
-            execute instruction
-            addCycles $ instructionCycles instruction
-        else do
-            store Memory.skip 0x0000
-            addCycles 1
-```
+When writing monadic code, add the `DoAndIfThenElse` pragma at the top of the
+file, and indent in the same manner (with the `then` and `else` aligned to the
+`if`).
 
 ### Case expressions
 
@@ -207,8 +194,8 @@ the two following styles:
 
 ```haskell
 foobar = case something of
-    Just j  -> foo
-    Nothing -> bar
+  Just j  -> foo
+  Nothing -> bar
 ```
 
 or as
@@ -237,19 +224,23 @@ Always use explicit import lists or `qualified` imports for standard
 and third party libraries.  This makes the code more robust against
 changes in these libraries.  Exception: The Prelude.
 
+When working in a project that uses ClassyPrelude, make sure to include
+`NoImplicitPrelude` pragma at the top of the file and import ClassyPrelude
+instead of using Prelude.
+
 Comments
 --------
 
 ### Punctuation
 
 Write proper sentences; start with a capital letter and use proper
-punctuation.
+punctuation. *This is important.*
 
 ### Top-Level Definitions
 
-Comment every top level function (particularly exported functions),
+Comment *every* top level function (not only exported functions),
 and provide a type signature; use Haddock syntax in the comments.
-Comment every exported data type.  Function example:
+Comment every data type, whether or not it is exported.  Function example:
 
 ```haskell
 -- | Send a message on a socket.  The socket must be in a connected
@@ -286,6 +277,11 @@ data Record = Record
     , field2 :: !Int
     }
 ```
+
+Note that this applies to *all* top-level functions and data types, regardless
+of whether or not they are exported. Similar levels of commenting should be
+applied to long functions declared in `let` or `where` blocks. When in doubt,
+overcomment. Whoever needs to read and maintain your code will thank you.
 
 ### End-of-Line Comments
 
@@ -335,7 +331,9 @@ Use singular when naming modules e.g. use `Data.Map` and
 Dealing with laziness
 ---------------------
 
-By default, use strict data types and lazy functions.
+By default, use lazy functions and strict data types. If you deviate from this,
+add a comment indicating the reason. If there is no commend indicating the
+reason, it is valid to change the definition to match these expectations.
 
 ### Data types
 
@@ -416,5 +414,8 @@ f = (g .) . h
 
 ### Warnings ###
 
-Code should be compilable with `-Wall -Werror`. There should be no
-warnings.
+Make sure that `hlint` gives no warnings for your code, using the default hint
+files shipped with hlint.
+
+Make sure that there are no serious warnings or deprecation warnings caused by
+using old APIs.

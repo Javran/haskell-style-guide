@@ -26,6 +26,9 @@ but indent `where` clause with 2 spaces.
 
 * Never align `where` the same as its previous or next line.
 
+* It is not encouraged to align your import list,
+as it is painful to do without a text editor.
+
 Some examples:
 
 ```haskell

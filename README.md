@@ -1,35 +1,38 @@
-Haskell Style Guide
-===================
+# Haskell Style Guide
 
-Every major open-source project has its own style guide: a set of
-conventions (sometimes arbitrary) about how to write code for that
-project.  It is much easier to understand a large codebase when all
-the code in it is in a consistent style.
+These is the style I practice writing Haskell code.
 
-This project holds the style guidelines I use for my code.  If you are
-modifying a project that was created by me, you may be pointed to this style
-guide.  I've tried to cover the major areas of formatting and naming.  When
-something isn't covered by this guide you should stay consistent with the code
-in the other modules. However, it is generally acceptable to fix formatting if
-you find places where it needs to be fixed.
+My principles are:
 
-Formatting
-----------
+* If performance is not important, prefer readability over efficiency
+
+* Styles should be easy to adapt even without the help of any text editor
+
+## Formatting
 
 ### Line Length
 
-Maximum line length is **100 characters**.
+Line length should be kept within **80 characters**.
+But maximum line length is **100 characters**.
 
 ### Indentation
 
-Tabs are illegal. Use spaces for indenting.  Indent your code blocks
-with **2 spaces**.  Indent the definitions in a `where` clause 2 spaces. Some examples:
+* Tabs are illegal. Use spaces for indenting.
+
+* Indent your code blocks with **4 spaces**.
+
+* Indent the definitions in a `where` clause 4 spaces,
+but indent `where` clause with 2 spaces.
+
+* Never align `where` the same as its previous or next line.
+
+Some examples:
 
 ```haskell
 sayHello :: IO ()
 sayHello = do
-  name <- getLine
-  putStrLn $ greeting name
+    name <- getLine
+    putStrLn $ greeting name
   where
     greeting name = "Hello, " ++ name ++ "!"
 
@@ -42,42 +45,50 @@ filter p (x:xs)
 
 ### Blank Lines
 
-One blank line between top-level definitions.  No blank lines between
-type signatures and function definitions.  Add one blank line between
-functions in a type class instance declaration if the functions bodies
-are large. Use your judgement.
+* One blank line between top-level definitions.
+
+* No blank lines between type signatures and function definitions.
+
+* Add one blank line between functions in a type class instance declaration
+if the functions bodies are large. Use your judgment.
 
 ### Whitespace
 
-Surround binary operators with a single space on either side, including all
-arithmetic operators. Don't insert a space after a lambda.
+* Surround binary operators with a single space on either side.
+
+* For arithmetic operators, tighter operators should have fewer surrounding spaces.
+
+```haskell
+1 + 1          -- ok
+1+1            -- ok
+1+8*9+9        -- ok
+1 + 8*9 + 9    -- ok
+1+8 * 9+9      -- no for the obvious reason
+```
+
+* Don't insert a space after a lambda.
 
 ### Data Declarations
 
 Align the constructors in a data type definition.  Example:
 
 ```haskell
-data Tree a = Branch !a !(Tree a) !(Tree a)
-            | Leaf
-```
-
-For long type names the following formatting is also acceptable:
-
-```haskell
-data HttpException
-    = InvalidStatusCode Int
-    | MissingContentHeader
+data Tree a
+  = Branch !a !(Tree a) !(Tree a)
+  | Leaf
 ```
 
 Format records as follows:
 
 ```haskell
 data Person = Person
-    { firstName :: !String  -- ^ First name
-    , lastName  :: !String  -- ^ Last name
-    , age       :: !Int     -- ^ Age
-    } deriving (Eq, Show)
+  { firstName :: !String  -- ^ First name
+  , lastName  :: !String  -- ^ Last name
+  , age       :: !Int     -- ^ Age
+  } deriving (Eq, Show)
 ```
+
+Double colons alignings are optional.
 
 ### List Declarations
 
@@ -85,13 +96,13 @@ Align the elements in the list.  Example:
 
 ```haskell
 exceptions =
-    [ InvalidStatusCode
-    , MissingContentHeader
-    , InternalServerError
-    ]
+  [ InvalidStatusCode
+  , MissingContentHeader
+  , InternalServerError
+  ]
 ```
 
-Optionally, you can skip the first newline.  Use your judgement.
+Don't do this:
 
 ```haskell
 directions = [ North
@@ -101,7 +112,13 @@ directions = [ North
              ]
 ```
 
+As when you change the name of `directions`,
+the alignment will be out-of-sync.
+
 ### Pragmas
+
+For this part I don't have any preferences, keep the old content
+for completeness.
 
 Put pragmas immediately following the function they apply to.
 Example:
@@ -131,12 +148,40 @@ bar :: IO ()
 bar = forM_ [1, 2, 3] $ \n -> do
           putStrLn "Here comes a number!"
           print n
+```
 
+If you find yourself writing many hanging lambdas, don't hesitate to use
+do notation.
+
+Instead of:
+
+```haskell
 foo :: IO ()
 foo = alloca 10 $ \a ->
       alloca 20 $ \b ->
       cFunction a b
 ```
+
+You can do:
+
+```haskell
+foo :: IO ()
+foo = do
+  a <- alloca 10
+  b <- alloca 20
+  cFunction a b
+```
+
+Or even better:
+
+```haskell
+foo :: IO ()
+foo = cFunction <$> alloca 10
+                <*> alloca 20
+```
+
+Prefer `<$>` and `<*>` combinations over `liftAN` and `liftMN` families.
+
 Whenever the lambda is used in something that implies a context (such as loops
 or resource management), make sure to indent the code in the lambda.
 
@@ -173,19 +218,31 @@ Generally, guards and pattern matches should be preferred over if-then-else
 clauses, where possible.  Short cases should usually be put on a single line
 (when line length allows it).
 
+* Never align `if` the same as `then` clause and `else` clause.
+
+* Always align `then` and `else`.
+
+* `DoAndIfThenElse` pragma **is illegal**.
+
 When writing non-monadic code (i.e. when not using `do`) and guards
 and pattern matches can't be used, you can align if-then-else clauses
 you like you would normal expressions:
 
 ```haskell
 foo = if ...
-      then ...
-      else ...
+        then ...
+        else ...
 ```
 
-When writing monadic code, add the `DoAndIfThenElse` pragma at the top of the
-file, and indent in the same manner (with the `then` and `else` aligned to the
-`if`).
+Or
+
+
+```haskell
+foo =
+  if ...
+    then ...
+    else ...
+```
 
 ### Case expressions
 
@@ -206,28 +263,38 @@ foobar = case something of
              Nothing -> bar
 ```
 
+But prefer the first one, save your spaces.
+
 Align the `->` arrows when it helps readability.
 
-Extensions
----
+## Extensions
+
 
 Languages are grouped into three categories:
 
-1. These should always be enabled. In order to work well with tools such as `hdevtools` and `hlint`, these should still be put in top-of-file pragmas in addition to the `*.cabal` file.
+1. These should always be enabled.
+In order to work well with tools such as `hdevtools` and `hlint`,
+these should still be put in top-of-file pragmas in addition to the `*.cabal` file.
 2. Acceptable for common use.
 3. Should not be used.
 
-These may change over time, but all code should be written with these classifications in mind. When in doubt, ask for clarification.
+These may change over time,
+but all code should be written with these classifications in mind.
+When in doubt, ask for clarification.
 
 ### Encouraged Extensions
 
-`DoAndIfThenElse`: Enable whenever you need `if`-`then`-`else` clauses in monadic code.
+`OverloadedStrings`: Enable whenever you are working
+with `ByteString`s, `Text`, or `FilePath`s, and definitely whenever working with `ClassyPrelude`.
 
-`OverloadedStrings`: Enable whenever you are working with `ByteString`s, `Text`, or `FilePath`s, and definitely whenever working with `ClassyPrelude`.
+`NoImplicitPrelude`: In a project that uses `ClassyPrelude`,
+*all* files should use `ClassyPrelude`.
+You may import functions you need from `Prelude` and
+hide things from `ClassyPrelude`, but should keep this to a minimum.
 
-`NoImplicitPrelude`: In a project that uses `ClassyPrelude`, *all* files should use `ClassyPrelude`. You may import functions you need from `Prelude` and hide things from `ClassyPrelude`, but should keep this to a minimum.
-
-`Derive*`: All extensions which enable deriving instances of `Typeable`, `Functor`, `Applicative`, `Generic`, etc, are encouraged, as they reduce boilerplate significantly.
+`Derive*`: All extensions which enable deriving
+instances of `Typeable`, `Functor`, `Applicative`, `Generic`, etc,
+are encouraged, as they reduce boilerplate significantly.
 
 `FlexibleInstances`, `FlexibleContexts`: Allow writing flexible typeclasses.
 
@@ -239,20 +306,26 @@ These may change over time, but all code should be written with these classifica
 
 `TypeSynonymInstances`: Especially where the underlying type is supposed to be mostly hidden.
 
-`NoMonomorphismRestriction`: Only to be used in code which requires it, such as when working with Diagrams or other similar packages.
+`NoMonomorphismRestriction`: Only to be used in code which requires it,
+such as when working with Diagrams or other similar packages.
 
 `TemplateHaskell`: To be used sparingly.
 
-Most type system extensions, such as `ExistentialQuantification`, `GADTs`, `TypeFamilies` are acceptable.
+Most type system extensions,
+such as `ExistentialQuantification`, `GADTs`, `TypeFamilies` are acceptable.
 
 ### Forbidden Extensions
 
-Pretty much everything else. In particular, avoid extensions which make your code less readable to people who are not used to them. This includes `ViewPatterns` (sorry), `MonadComprehensions` (and other list comprehension extensions), `RecursiveDo`, `DoRec`, `UnicodeSyntax`.
+* `DoAndIfThenElse`: not to indent `if` the same as `then` and `else`
+
+* `UnicodeSyntax`: the only place where unicode characters can show up
+is in string literals.
+
+* `ViewPatterns`
 
 When in doubt, ask for clarification.
 
-Imports
--------
+## Imports
 
 Imports should be grouped in the following order:
 
@@ -260,19 +333,18 @@ Imports should be grouped in the following order:
 2. related third party imports
 3. local application/library specific imports
 
-Put a blank line between each group of imports.  The imports in each
-group should be sorted alphabetically, by module name.
+* Group imports base on your judgment.
 
-Always use explicit import lists or `qualified` imports for standard
-and third party libraries.  This makes the code more robust against
-changes in these libraries.  Exception: The Prelude.
+* Alphabetical import list is not encouraged, there are things more important
 
-When working in a project that uses ClassyPrelude, make sure to include
+* Explicit import list is not encouraged, as adding and removing every
+definition becomes a pain. Use qualified import when there are conflicts.
+
+* When working in a project that uses ClassyPrelude, make sure to include
 `NoImplicitPrelude` pragma at the top of the file and import ClassyPrelude
 instead of using Prelude.
 
-Comments
---------
+## Comments
 
 ### Punctuation
 
@@ -281,9 +353,17 @@ punctuation. *This is important.*
 
 ### Top-Level Definitions
 
-Comment *every* top level function (not only exported functions),
-and provide a type signature; use Haddock syntax in the comments.
-Comment every data type, whether or not it is exported.  Function example:
+* Exported functions are encouraged to have a top level comment
+
+* a type signature should be provided and a partial type signature
+is fine as long as an explanation is available in the comment.
+
+* Use Haddock syntax in the comments.
+
+It is encouraged to comment every data type, but it's not required
+if the field name can speak for itself.
+
+Function example:
 
 ```haskell
 -- | Send a message on a socket.  The socket must be in a connected
@@ -314,22 +394,22 @@ data Record = Record
     { -- | This is a very very very long comment that is split over
       -- multiple lines.
       field1 :: !Text
-      
+
       -- | This is a second very very very long comment that is split
       -- over multiple lines.
     , field2 :: !Int
     }
 ```
 
-Note that this applies to *all* top-level functions and data types, regardless
-of whether or not they are exported. Similar levels of commenting should be
+Similar levels of commenting should be
 applied to long functions declared in `let` or `where` blocks. When in doubt,
 overcomment. Whoever needs to read and maintain your code will thank you.
 
 ### End-of-Line Comments
 
-Separate end-of-line comments from the code using 2 spaces.  Align
-comments for data type definitions.  Some examples:
+It's encouraged to align end-of-line comments.
+
+Align comments for data type definitions.  Some examples:
 
 ```haskell
 data Parser = Parser
@@ -355,8 +435,7 @@ if:
 * Only for the first occurrence of each API name in the comment (don't
   bother repeating a link)
 
-Naming
-------
+# Naming
 
 Use camel case (e.g. `functionName`) when naming functions and upper
 camel case (e.g. `DataType`) when naming data types.
@@ -371,8 +450,7 @@ Use singular when naming modules e.g. use `Data.Map` and
 `Data.ByteString.Internal` instead of `Data.Maps` and
 `Data.ByteString.Internals`.
 
-Dealing with laziness
----------------------
+## Dealing with laziness
 
 By default, use lazy functions and strict data types. If you deviate from this,
 add a comment indicating the reason. If there is no commend indicating the
@@ -443,17 +521,20 @@ mysum = go 0
     go acc (x:xs) = go (acc + x) xs
 ```
 
-Misc
-----
+# Misc
 
 ### Point-free style ###
 
-Avoid over-using point-free style. For example, this is hard to read:
+Point-free style are acceptable only if:
 
-```haskell
--- Bad:
-f = (g .) . h
-```
+* all chaining functions are unary functions
+
+* non-unary functions are still acceptable if
+for each of them in the function composition chain,
+there is a no less than 2 lines of explanation written in the comment.
+
+* If the 2 requirements above are met, but `hlint` gets in your way,
+use annotation to suppress it (minimize the line affected by the annotation).
 
 ### Warnings ###
 
